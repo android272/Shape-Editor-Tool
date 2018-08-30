@@ -100,7 +100,11 @@ public class ShapeEditor : Editor {
     void DeletePointUnderMouse()
     {
         Undo.RecordObject(shapeCreator, "Delete point");
-        SelectedShape.points.RemoveAt(selectionInfo.pointIndex);
+        if(selectionInfo.pointIndex.Equals(0)) {
+            shapeCreator.shapes.RemoveAt(selectionInfo.selectedShapeIndex);
+        } else {
+            SelectedShape.points.RemoveAt(selectionInfo.pointIndex);
+        }
         selectionInfo.pointIsSelected = false;
         selectionInfo.mouseIsOverPoint = false;
         shapeChangedSinceLastRepaint = true;
