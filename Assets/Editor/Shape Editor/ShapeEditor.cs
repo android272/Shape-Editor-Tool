@@ -10,9 +10,22 @@ public class ShapeEditor : Editor {
     ShapeCreator shapeCreator;
     SelectionInfo selectionInfo;
     bool shapeChangedSinceLastRepaint;
+    ITranslationStrategy strategy;
 
     public override void OnInspectorGUI() {
         base.OnInspectorGUI();
+        switch(shapeCreator.drawOrientation) {
+            case ShapeCreator.DrawOrientation.X:
+                strategy = new XPlaneStrategy();
+                break;
+            case ShapeCreator.DrawOrientation.Y:
+                strategy = new YPlaneStrategy();
+                break;
+            default:
+                strategy = new ZPlaneStrategy();
+                break;
+        }
+
         string helpMessage = "Left click to add points.\nShift-left click on point to delete.\nShift-left click on empty space to create new shape.";
         EditorGUILayout.HelpBox(helpMessage, MessageType.Info);
 
@@ -110,18 +123,7 @@ public class ShapeEditor : Editor {
 		Ray mouseRay = HandleUtility.GUIPointToWorldRay(guiEvent.mousePosition);
 		float drawPlaneHeight = 0;
 
-        float dstToDrawPlane;
-        switch(shapeCreator.drawOrientation) {
-            case ShapeCreator.DrawOrientation.X:
-                dstToDrawPlane = (drawPlaneHeight - mouseRay.origin.x) / mouseRay.direction.x;
-                break;
-            case ShapeCreator.DrawOrientation.Y:
-                dstToDrawPlane = (drawPlaneHeight - mouseRay.origin.y) / mouseRay.direction.y;
-                break;
-            default:
-                dstToDrawPlane = (drawPlaneHeight - mouseRay.origin.z) / mouseRay.direction.z;
-                break;
-        }
+        float dstToDrawPlane = strategy.CalculateDistanceToDrawPlane(drawPlaneHeight, mouseRay);
 
         Vector3 mousePosition = mouseRay.GetPoint(dstToDrawPlane);
 
@@ -223,20 +225,10 @@ public class ShapeEditor : Editor {
                 Shape currentShape = shapeCreator.shapes[shapeIndex];
 
                 for(int i = 0; i < currentShape.points.Count; i++) {
+                    Vector3 currentPoint = currentShape.points[i];
                     Vector3 nextPointInShape = currentShape.points[(i + 1) % currentShape.points.Count];
 
-                    float dstFromMouseToLine;
-                    switch(shapeCreator.drawOrientation) {
-                        case ShapeCreator.DrawOrientation.X:
-                            dstFromMouseToLine = HandleUtility.DistancePointToLineSegment(mousePosition.ToYZ(), currentShape.points[i].ToYZ(), nextPointInShape.ToYZ());
-                            break;
-                        case ShapeCreator.DrawOrientation.Y:
-                            dstFromMouseToLine = HandleUtility.DistancePointToLineSegment(mousePosition.ToXZ(), currentShape.points[i].ToXZ(), nextPointInShape.ToXZ());
-                            break;
-                        default:
-                            dstFromMouseToLine = HandleUtility.DistancePointToLineSegment(mousePosition.ToXY(), currentShape.points[i].ToXY(), nextPointInShape.ToXY());
-                            break;
-                    }
+                    float dstFromMouseToLine = strategy.CalculateDistanceFromMouseToLine(mousePosition, currentPoint, nextPointInShape);
 
                     if (dstFromMouseToLine < closestLineDst) {
                         closestLineDst = dstFromMouseToLine;
@@ -265,6 +257,7 @@ public class ShapeEditor : Editor {
 
             for(int i = 0; i < shapeToDraw.points.Count; i++) {
                 Vector3 nextPoint = shapeToDraw.points[(i + 1) % shapeToDraw.points.Count];
+                Vector3 pointToDraw = shapeToDraw.points[i];
                 if(i == selectionInfo.lineIndex && mouseIsOverShape) {
                     Handles.color = Color.red;
                     Handles.DrawLine(shapeToDraw.points[i], nextPoint);
@@ -281,17 +274,7 @@ public class ShapeEditor : Editor {
                     Handles.color = (shapeIsSelected)?Color.white:deselectedShapeColour;
                 }
 
-                switch(shapeCreator.drawOrientation) {
-                    case ShapeCreator.DrawOrientation.X:
-                        Handles.DrawSolidDisc(shapeToDraw.points[i], Vector3.right, shapeCreator.handleRadius);
-                        break;
-                    case ShapeCreator.DrawOrientation.Y:
-                        Handles.DrawSolidDisc(shapeToDraw.points[i], Vector3.up, shapeCreator.handleRadius);
-                        break;
-                    case ShapeCreator.DrawOrientation.Z:
-                        Handles.DrawSolidDisc(shapeToDraw.points[i], Vector3.forward, shapeCreator.handleRadius);
-                        break;
-                }
+                strategy.DrawHandle(pointToDraw, shapeCreator.handleRadius);
             }
         }
 
@@ -337,5 +320,53 @@ public class ShapeEditor : Editor {
 
         public int lineIndex = -1;
         public bool mouseIsOverLine;
+    }
+}
+
+public interface ITranslationStrategy {
+    float CalculateDistanceToDrawPlane(float drawPlaneHeight, Ray mouseRay);
+    float CalculateDistanceFromMouseToLine(Vector3 mousePosition, Vector3 currentPoint, Vector3 nextPointInShape);
+    void DrawHandle(Vector3 pointToDraw, float handleRadius);
+}
+
+public class XPlaneStrategy : ITranslationStrategy {
+    public float CalculateDistanceToDrawPlane(float drawPlaneHeight, Ray mouseRay) {
+        return (drawPlaneHeight - mouseRay.origin.x) / mouseRay.direction.x;
+    }
+
+    public float CalculateDistanceFromMouseToLine(Vector3 mousePosition, Vector3 currentPoint, Vector3 nextPointInShape) {
+        return HandleUtility.DistancePointToLineSegment(mousePosition.ToYZ(), currentPoint.ToYZ(), nextPointInShape.ToYZ());
+    }
+
+    public void DrawHandle(Vector3 pointToDraw, float handleRadius) {
+        Handles.DrawSolidDisc(pointToDraw, Vector3.right, handleRadius);
+    }
+}
+
+public class YPlaneStrategy : ITranslationStrategy {
+    public float CalculateDistanceToDrawPlane(float drawPlaneHeight, Ray mouseRay) {
+        return (drawPlaneHeight - mouseRay.origin.y) / mouseRay.direction.y;
+    }
+
+    public float CalculateDistanceFromMouseToLine(Vector3 mousePosition, Vector3 currentPoint, Vector3 nextPointInShape) {
+        return HandleUtility.DistancePointToLineSegment(mousePosition.ToXZ(), currentPoint.ToXZ(), nextPointInShape.ToXZ());
+    }
+
+    public void DrawHandle(Vector3 pointToDraw, float handleRadius) {
+        Handles.DrawSolidDisc(pointToDraw, Vector3.up, handleRadius);
+    }
+}
+
+public class ZPlaneStrategy : ITranslationStrategy {
+    public float CalculateDistanceToDrawPlane(float drawPlaneHeight, Ray mouseRay) {
+        return (drawPlaneHeight - mouseRay.origin.z) / mouseRay.direction.z;
+    }
+
+    public float CalculateDistanceFromMouseToLine(Vector3 mousePosition, Vector3 currentPoint, Vector3 nextPointInShape) {
+        return HandleUtility.DistancePointToLineSegment(mousePosition.ToXY(), currentPoint.ToXY(), nextPointInShape.ToXY());
+    }
+
+    public void DrawHandle(Vector3 pointToDraw, float handleRadius) {
+        Handles.DrawSolidDisc(pointToDraw, Vector3.forward, handleRadius);
     }
 }
