@@ -109,8 +109,21 @@ public class ShapeEditor : Editor {
     void HandleInput(Event guiEvent) {
 		Ray mouseRay = HandleUtility.GUIPointToWorldRay(guiEvent.mousePosition);
 		float drawPlaneHeight = 0;
-		float dstToDrawPlane = (drawPlaneHeight - mouseRay.origin.y) / mouseRay.direction.y;
-		Vector3 mousePosition = mouseRay.GetPoint(dstToDrawPlane);
+
+        float dstToDrawPlane;
+        switch(shapeCreator.drawOrientation) {
+            case ShapeCreator.DrawOrientation.X:
+                dstToDrawPlane = (drawPlaneHeight - mouseRay.origin.x) / mouseRay.direction.x;
+                break;
+            case ShapeCreator.DrawOrientation.Y:
+                dstToDrawPlane = (drawPlaneHeight - mouseRay.origin.y) / mouseRay.direction.y;
+                break;
+            default:
+                dstToDrawPlane = (drawPlaneHeight - mouseRay.origin.z) / mouseRay.direction.z;
+                break;
+        }
+
+        Vector3 mousePosition = mouseRay.GetPoint(dstToDrawPlane);
 
         if (guiEvent.type == EventType.MouseDown && guiEvent.button == 0 && guiEvent.modifiers == EventModifiers.Shift) {
             HandleShiftLeftMouseDown(mousePosition);
@@ -211,7 +224,20 @@ public class ShapeEditor : Editor {
 
                 for(int i = 0; i < currentShape.points.Count; i++) {
                     Vector3 nextPointInShape = currentShape.points[(i + 1) % currentShape.points.Count];
-                    float dstFromMouseToLine = HandleUtility.DistancePointToLineSegment(mousePosition.ToXZ(), currentShape.points[i].ToXZ(), nextPointInShape.ToXZ());
+
+                    float dstFromMouseToLine;
+                    switch(shapeCreator.drawOrientation) {
+                        case ShapeCreator.DrawOrientation.X:
+                            dstFromMouseToLine = HandleUtility.DistancePointToLineSegment(mousePosition.ToYZ(), currentShape.points[i].ToYZ(), nextPointInShape.ToYZ());
+                            break;
+                        case ShapeCreator.DrawOrientation.Y:
+                            dstFromMouseToLine = HandleUtility.DistancePointToLineSegment(mousePosition.ToXZ(), currentShape.points[i].ToXZ(), nextPointInShape.ToXZ());
+                            break;
+                        default:
+                            dstFromMouseToLine = HandleUtility.DistancePointToLineSegment(mousePosition.ToXY(), currentShape.points[i].ToXY(), nextPointInShape.ToXY());
+                            break;
+                    }
+
                     if (dstFromMouseToLine < closestLineDst) {
                         closestLineDst = dstFromMouseToLine;
                         mouseOverLineIndex = i;
@@ -254,7 +280,18 @@ public class ShapeEditor : Editor {
                 {
                     Handles.color = (shapeIsSelected)?Color.white:deselectedShapeColour;
                 }
-                Handles.DrawSolidDisc(shapeToDraw.points[i], Vector3.up, shapeCreator.handleRadius);
+
+                switch(shapeCreator.drawOrientation) {
+                    case ShapeCreator.DrawOrientation.X:
+                        Handles.DrawSolidDisc(shapeToDraw.points[i], Vector3.right, shapeCreator.handleRadius);
+                        break;
+                    case ShapeCreator.DrawOrientation.Y:
+                        Handles.DrawSolidDisc(shapeToDraw.points[i], Vector3.up, shapeCreator.handleRadius);
+                        break;
+                    case ShapeCreator.DrawOrientation.Z:
+                        Handles.DrawSolidDisc(shapeToDraw.points[i], Vector3.forward, shapeCreator.handleRadius);
+                        break;
+                }
             }
         }
 
