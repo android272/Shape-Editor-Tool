@@ -32,6 +32,7 @@ namespace Sebastian.Geometry
             {
                 vertices = vertices,
                 triangles = triangles,
+                //TODO add drawOrientation
                 normals = vertices.Select(x => Vector3.up).ToArray()
             };
         }
@@ -46,8 +47,7 @@ namespace Sebastian.Geometry
             {
                 for (int j = 0; j < eligibleShapes.Length; j++)
                 {
-                    if (i == j)
-                        continue;
+                    if(i == j) { continue; }
 
                     if (eligibleShapes[i].IsParentOf(eligibleShapes[j]))
                     {
