@@ -70,12 +70,12 @@ namespace Sebastian.Geometry
             foreach (CompositeShapeData solidShape in solidShapes)
             {
                 solidShape.ValidateHoles();
-
             }
             // Create polygons from the solid shapes and their associated hole shapes
             Polygon[] polygons = solidShapes.Select(x => new Polygon(x.polygon.points, x.holes.Select(h => h.polygon.points).ToArray())).ToArray();
-  
+
             // Flatten the points arrays from all polygons into a single array, and convert the vector2s to vector3s.
+            //TODO add drawOrientation
             vertices = polygons.SelectMany(x => x.points.Select(v2 => new Vector3(v2.x, height, v2.y))).ToArray();
 
             // Triangulate each polygon and flatten the triangle arrays into a single array.
