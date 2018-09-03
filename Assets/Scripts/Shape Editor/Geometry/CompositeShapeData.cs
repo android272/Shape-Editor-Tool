@@ -131,7 +131,6 @@ namespace Sebastian.Geometry
             // Checks if any of the line segments making up this shape intersect
             public bool IntersectsWithSelf()
             {
-
                 for (int i = 0; i < points.Length; i++)
                 {
                     LineSegment segA = new LineSegment(points[i], points[(i + 1) % points.Length]);

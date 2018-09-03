@@ -144,7 +144,7 @@ MonoBehaviour:
   shapes: []
   showShapesList: 1
   handleRadius: 0.5
-  drawOrientation: 1
+  drawOrientation: 0
 --- !u!4 &344253690
 Transform:
   m_ObjectHideFlags: 0
@@ -217,7 +217,7 @@ MeshFilter:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 429069271}
-  m_Mesh: {fileID: 1773471986}
+  m_Mesh: {fileID: 1352355595}
 --- !u!4 &429069274
 Transform:
   m_ObjectHideFlags: 0
@@ -390,7 +390,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!43 &1773471986
+--- !u!43 &1352355595
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

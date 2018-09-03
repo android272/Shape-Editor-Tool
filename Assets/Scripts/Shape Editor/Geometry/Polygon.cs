@@ -70,6 +70,7 @@ namespace Sebastian.Geometry
             for (int i = 0; i < testPoints.Length; i++)
             {
                 int nextIndex = (i + 1) % testPoints.Length;
+                //TODO add drawOrientation
                 signedArea += (testPoints[nextIndex].x - testPoints[i].x) * (testPoints[nextIndex].y + testPoints[i].y);
             }
 

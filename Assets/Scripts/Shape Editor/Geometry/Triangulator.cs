@@ -117,12 +117,14 @@ namespace Sebastian.Geometry
                 sortedHoleData.Add(new HoleData(holeIndex, holeBridgeIndex, holeBridgePoint));
             }
             // Sort hole data so that holes furthest to the right are first
+            //TODO add drawOrientation
             sortedHoleData.Sort((x, y) => (x.bridgePoint.x > y.bridgePoint.x) ? -1 : 1);
 
             foreach (HoleData holeData in sortedHoleData)
             {
 
                 // Find first edge which intersects with rightwards ray originating at the hole bridge point.
+                //TODO add drawOrientation
                 Vector2 rayIntersectPoint = new Vector2(float.MaxValue, holeData.bridgePoint.y);
                 List<LinkedListNode<Vertex>> hullNodesPotentiallyInBridgeTriangle = new List<LinkedListNode<Vertex>>();
                 LinkedListNode<Vertex> initialBridgeNodeOnHull = null;
@@ -134,10 +136,12 @@ namespace Sebastian.Geometry
                     Vector2 p1 = nextNode.Value.position;
 
                     // at least one point must be to right of holeData.bridgePoint for intersection with ray to be possible
-                    if (p0.x > holeData.bridgePoint.x || p1.x > holeData.bridgePoint.x)
+                    //TODO add drawOrientation
+                    if(p0.x > holeData.bridgePoint.x || p1.x > holeData.bridgePoint.x)
                     {
                         // one point is above, one point is below
-                        if (p0.y > holeData.bridgePoint.y != p1.y > holeData.bridgePoint.y)
+                        //TODO add drawOrientation
+                        if(p0.y > holeData.bridgePoint.y != p1.y > holeData.bridgePoint.y)
                         {
                             float rayIntersectX = p1.x; // only true if line p0,p1 is vertical
                             if (!Mathf.Approximately(p0.x, p1.x))
